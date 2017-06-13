@@ -630,6 +630,11 @@ const tabState = {
     return entry ? entry.get('url') : ''
   },
 
+  getVisibleOrigin: (state, tabId) => {
+    const entry = tabState.getVisibleEntry(state, tabId)
+    return entry ? entry.get('origin') : ''
+  },
+
   getVisibleVirtualURL: (state, tabId) => {
     const entry = tabState.getVisibleEntry(state, tabId)
     return entry ? entry.get('virtualURL') : ''
