@@ -21,6 +21,8 @@ const {getSetting} = require('../settings')
 const {isIntermediateAboutPage} = require('../lib/appUrlUtil')
 const urlParse = require('../../app/common/urlParse')
 
+let hoverTimeout = null
+
 const comparatorByKeyAsc = (a, b) => a.get('key') > b.get('key')
   ? 1 : b.get('key') > a.get('key') ? -1 : 0
 
@@ -397,9 +399,8 @@ function removeFrame (state, frameProps, framePropsIndex) {
   }
 }
 
-function getFrameTabPageIndex (state, frameProps, tabsPerTabPage) {
-  frameProps = makeImmutable(frameProps)
-  const index = findNonPinnedDisplayIndexForFrameKey(state, frameProps.get('key'))
+function getFrameTabPageIndex (state, frameKey, tabsPerTabPage = getSetting(settings.TABS_PER_PAGE)) {
+  const index = findNonPinnedDisplayIndexForFrameKey(state, frameKey)
   if (index === -1) {
     return -1
   }
@@ -451,7 +452,8 @@ function isPinned (state, frameKey) {
  * @param frameProps Any frame belonging to the page
  */
 function updateTabPageIndex (state, frameProps) {
-  const index = getFrameTabPageIndex(state, frameProps, getSetting(settings.TABS_PER_PAGE))
+  frameProps = makeImmutable(frameProps)
+  const index = getFrameTabPageIndex(state, frameProps.get('key'))
 
   if (index === -1) {
     return state
@@ -532,7 +534,55 @@ const getTabPageCount = (state) => {
   return Math.ceil(frames.size / tabsPerPage)
 }
 
+const getPreviewFrameKey = (state) => {
+  return state.get('previewFrameKey')
+}
+
+const setPreviewFrameKey = (state, frameKey, immediate = false) => {
+  clearTimeout(hoverTimeout)
+  const frame = getFrameByKey(state, frameKey)
+  const isActive = isFrameKeyActive(state, frameKey)
+  const previewTabs = getSetting(settings.SHOW_TAB_PREVIEWS)
+  let newPreviewFrameKey = frameKey
+
+  if (!previewTabs || frame == null || !frame.get('hoverState') || isActive) {
+    newPreviewFrameKey = null
+  }
+
+  if (!immediate) {
+    // if there is an existing preview frame key then we're already in preview mode
+    // we use actions here because that is the only way to delay updating the state
+    const previewMode = getPreviewFrameKey(state) != null
+    if (previewMode && newPreviewFrameKey == null) {
+      // add a small delay when we are clearing the preview frame key so we don't lose
+      // previewMode if the user mouses over another tab - see below
+      hoverTimeout = setTimeout(windowActions.setPreviewFrame.bind(null, null), 200)
+      return state
+    }
+
+    if (!previewMode) {
+      // If user isn't in previewMode so we add a bit of delay to avoid tab from flashing out
+      // as reported here: https://github.com/brave/browser-laptop/issues/1434
+      // using an action here because that is the only way we can do a delayed state update
+      hoverTimeout = setTimeout(windowActions.setPreviewFrame.bind(null, newPreviewFrameKey), 200)
+      return state
+    }
+  }
+
+  const index = getFrameTabPageIndex(state, frame)
+  if (index !== -1) {
+    if (index !== state.getIn(['ui', 'tabs', 'tabPageIndex'])) {
+      state = state.setIn(['ui', 'tabs', 'previewTabPageIndex'], index)
+    } else {
+      state = state.deleteIn(['ui', 'tabs', 'previewTabPageIndex'])
+    }
+  }
+  return state.set('previewFrameKey', newPreviewFrameKey)
+}
+
 module.exports = {
+  setPreviewFrameKey,
+  getPreviewFrameKey,
   deleteTabInternalIndex,
   deleteFrameInternalIndex,
   updateFramesInternalIndex,

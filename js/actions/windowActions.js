@@ -229,7 +229,8 @@ const windowActions = {
 
   /**
    * Dispatches a message to the store to set a preview frame.
-   * This is done when hovering over a tab.
+   * This should only be called internally by `WINDOW_SET_TAB_HOVER_STATE`
+   * when we need to delay updating the preview frame value
    *
    * @param {Object} frameKey - the frame key for the webview in question.
    */
@@ -277,18 +278,6 @@ const windowActions = {
       actionType: windowConstants.WINDOW_SET_TAB_HOVER_STATE,
       frameKey,
       hoverState
-    })
-  },
-
-  /**
-   * Dispatches a message to the store to set the tab page index being previewed.
-   *
-   * @param {number} previewTabPageIndex - The tab page index to preview
-   */
-  setPreviewTabPageIndex: function (previewTabPageIndex) {
-    dispatch({
-      actionType: windowConstants.WINDOW_SET_PREVIEW_TAB_PAGE_INDEX,
-      previewTabPageIndex
     })
   },
 

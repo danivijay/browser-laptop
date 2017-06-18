@@ -355,19 +355,7 @@ const doAction = (action) => {
       windowState = windowState.set('closedFrames', new Immutable.List())
       break
     case windowConstants.WINDOW_SET_PREVIEW_FRAME:
-      windowState = windowState.merge({
-        previewFrameKey:
-          action.frameKey != null && !frameStateUtil.isFrameKeyActive(windowState, action.frameKey)
-          ? action.frameKey
-          : null
-      })
-      break
-    case windowConstants.WINDOW_SET_PREVIEW_TAB_PAGE_INDEX:
-      if (action.previewTabPageIndex !== windowState.getIn(['ui', 'tabs', 'tabPageIndex'])) {
-        windowState = windowState.setIn(['ui', 'tabs', 'previewTabPageIndex'], action.previewTabPageIndex)
-      } else {
-        windowState = windowState.deleteIn(['ui', 'tabs', 'previewTabPageIndex'])
-      }
+      windowState = frameStateUtil.setPreviewFrameKey(windowState, action.frameKey, true)
       break
     case windowConstants.WINDOW_SET_TAB_PAGE_INDEX:
       if (action.index !== undefined) {
@@ -393,6 +381,7 @@ const doAction = (action) => {
         const frameIndex = frameStateUtil.getFrameIndex(windowState, action.frameKey)
         if (frameIndex !== -1) {
           windowState = windowState.setIn(['frames', frameIndex, 'hoverState'], action.hoverState)
+          windowState = frameStateUtil.setPreviewFrameKey(windowState, action.frameKey)
         }
         break
       }
