@@ -35,6 +35,30 @@ class AdvancedTab extends ImmutableComponent {
         onChangeSetting={this.props.onChangeSetting} />
   }
 
+  get swipeNavigationSensitivitySetting () {
+    if (platformUtil.isDarwin()) {
+      return <div>
+        <DefaultSectionTitle data-l10n-id='swipeNavigationSensitivity' />
+        <SettingsList listClassName={css(styles.swipeNavigation)}>
+          <span data-l10n-id='fast' className={css(styles.swipeNavigation__fastLabel)} />
+          <input type='range' min='0' max='200' step='50' list='swipetSensitivity'
+            value={getSetting(settings.SWIPE_NAV_SENSITIVITY, this.props.settings)}
+            onChange={changeSetting.bind(null, this.props.onChangeSetting, settings.SWIPE_NAV_SENSITIVITY)} />
+          <datalist id='swipetSensitivity'>
+            <option value='0' />
+            <option value='50' />
+            <option value='100' />
+            <option value='150' />
+            <option value='200' />
+          </datalist>
+          <span data-l10n-id='slow' className={css(styles.swipeNavigation__slowLabel)} />
+        </SettingsList>
+      </div>
+    }
+
+    return null
+  }
+
   render () {
     return <section>
       <main className={css(styles.advancedTabMain)}>
@@ -62,6 +86,8 @@ class AdvancedTab extends ImmutableComponent {
           </SettingItem>
         </SettingsList>
 
+        {this.swipeNavigationSensitivitySetting}
+
         <DefaultSectionTitle data-l10n-id='urlBarOptions' />
         <SettingsList>
           <SettingCheckbox dataL10nId='disableTitleMode' prefKey={settings.DISABLE_TITLE_MODE} settings={this.props.settings} onChangeSetting={this.props.onChangeSetting} />
@@ -78,6 +104,19 @@ class AdvancedTab extends ImmutableComponent {
 const styles = StyleSheet.create({
   advancedTabMain: {
     paddingBottom: '40px'
+  },
+
+  swipeNavigation: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+
+  swipeNavigation__fastLabel: {
+    marginRight: '5px'
+  },
+
+  swipeNavigation__slowLabel: {
+    marginLeft: '5px'
   },
 
   moreInfo: {

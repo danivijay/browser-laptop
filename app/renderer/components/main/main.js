@@ -229,10 +229,11 @@ class Main extends ImmutableComponent {
     }, { passive: true })
 
     ipc.on('scroll-touch-end', () => {
-      if (trackingFingers && time > 30 && Math.abs(deltaY) < 80) {
-        if (deltaX > 70 && isSwipeOnRightEdge) {
+      const threshold = getSetting(settings.SWIPE_NAV_SENSITIVITY)
+      if (trackingFingers && time > threshold && Math.abs(deltaY) < 80) {
+        if (deltaX > 80 && isSwipeOnRightEdge) {
           ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_FORWARD)
-        } else if (deltaX < -70 && isSwipeOnLeftEdge) {
+        } else if (deltaX < -80 && isSwipeOnLeftEdge) {
           ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_BACK)
         }
       }
