@@ -151,6 +151,8 @@ class Navigator extends React.Component {
 
   mergeProps (state, ownProps) {
     const currentWindow = state.get('currentWindow')
+    const swipeLeftPercent = state.get('swipeLeftPercent')
+    const swipeRightPercent = state.get('swipeRightPercent')
     const activeFrame = frameStateUtil.getActiveFrame(currentWindow) || Immutable.Map()
     const activeFrameKey = activeFrame.get('key')
     const activeTabId = activeFrame.get('tabId') || tabState.TAB_ID_NONE
@@ -189,6 +191,10 @@ class Navigator extends React.Component {
     props.isWideURLbarEnabled = getSetting(settings.WIDE_URL_BAR)
     props.showNavigationBar = activeFrameKey !== undefined &&
       state.get('siteSettings') !== undefined
+    props.swipeLeftPercent = swipeLeftPercent ? (swipeLeftPercent + 1) * 1.5 : 1
+    props.swipeRightPercent = swipeRightPercent ? (swipeRightPercent + 1) * 1.5 : 1
+    props.swipeLeftOpacity = 0.85 - (swipeLeftPercent > 0.75 ? 0.75 : swipeLeftPercent)
+    props.swipeRightOpacity = 0.85 - (swipeRightPercent > 0.75 ? 0.75 : swipeRightPercent)
 
     // used in other functions
     props.isNavigable = activeFrame && isNavigatableAboutPage(getBaseUrl(activeFrame.get('location')))
@@ -229,7 +235,11 @@ class Navigator extends React.Component {
                 navigationButtonContainer: true,
                 nav: true,
                 disabled: !this.props.canGoBack
-              })}>
+              })}
+              style={{
+                transform: this.props.canGoBack ? `scale(${this.props.swipeLeftPercent})` : `scale(1)`,
+                opacity: `${this.props.swipeLeftOpacity}`
+              }}>
               <LongPressButton
                 testId={!this.props.canGoBack ? 'backButtonDisabled' : 'backButton'}
                 l10nId='backButton'
@@ -248,7 +258,11 @@ class Navigator extends React.Component {
                 navigationButtonContainer: true,
                 nav: true,
                 disabled: !this.props.canGoForward
-              })}>
+              })}
+              style={{
+                transform: this.props.canGoForward ? `scale(${this.props.swipeRightPercent})` : `scale(1)`,
+                opacity: `${this.props.swipeRightOpacity}`
+              }}>
               <LongPressButton
                 testId={!this.props.canGoForward ? 'forwardButtonDisabled' : 'forwardButton'}
                 l10nId='forwardButton'

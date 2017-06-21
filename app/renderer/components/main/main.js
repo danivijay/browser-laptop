@@ -202,6 +202,7 @@ class Main extends ImmutableComponent {
 
   registerSwipeListener () {
     // Navigates back/forward on macOS two- and or three-finger swipe
+    const distanceThreshold = 80
     let mouseInFrame = false
     let trackingFingers = false
     let startTime = 0
@@ -224,19 +225,35 @@ class Main extends ImmutableComponent {
       if (trackingFingers) {
         deltaX = deltaX + e.deltaX
         deltaY = deltaY + e.deltaY
+        const percent = Math.abs(deltaX) / distanceThreshold
+        if (isSwipeOnRightEdge) {
+          if (percent > 1) {
+            appActions.swipedRight(1)
+          } else {
+            appActions.swipedRight(percent)
+          }
+        } else if (isSwipeOnLeftEdge) {
+          if (percent > 1) {
+            appActions.swipedLeft(1)
+          } else {
+            appActions.swipedLeft(percent)
+          }
+        }
         time = (new Date()).getTime() - startTime
       }
     }, { passive: true })
 
     ipc.on('scroll-touch-end', () => {
-      const threshold = getSetting(settings.SWIPE_NAV_SENSITIVITY)
-      if (trackingFingers && time > threshold && Math.abs(deltaY) < 80) {
-        if (deltaX > 80 && isSwipeOnRightEdge) {
+      const timeThreshold = getSetting(settings.SWIPE_NAV_SENSITIVITY)
+      if (trackingFingers && time > timeThreshold && Math.abs(deltaY) < distanceThreshold) {
+        if (deltaX > distanceThreshold && isSwipeOnRightEdge) {
           ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_FORWARD)
-        } else if (deltaX < -80 && isSwipeOnLeftEdge) {
+        } else if (deltaX < -distanceThreshold && isSwipeOnLeftEdge) {
           ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_BACK)
         }
       }
+      appActions.swipedLeft(0)
+      appActions.swipedRight(0)
       trackingFingers = false
       deltaX = 0
       deltaY = 0
